@@ -22,6 +22,9 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
+# Global variable to store all extracted data
+extractedData = None
+
 def extract_playlist_id(url):
     """Extract playlist ID from Spotify URL"""
     try:
@@ -69,13 +72,18 @@ def extract_playlist():
                 processor = DataProcessor()
                 processed_data = processor.process_tracks(tracks_data, playlist_data)
                 
-                return jsonify({
+                # Store all tracks globally for export
+                global extractedData
+                extractedData = {
                     'success': True,
                     'method': 'Spotify API',
                     'playlist': playlist_data,
-                    'tracks': processed_data[:20],  # Top 20 tracks
+                    'tracks': processed_data[:20],  # Top 20 tracks for display
+                    'all_tracks': processed_data,   # All tracks for export
                     'total_tracks': len(processed_data)
-                })
+                }
+                
+                return jsonify(extractedData)
             
         except Exception as api_error:
             logger.error(f"Spotify API failed: {api_error}")
@@ -155,6 +163,46 @@ def export_excel():
     except Exception as e:
         logger.error(f"Error exporting Excel: {e}")
         return jsonify({'error': f'Failed to export Excel: {str(e)}'}), 500
+
+@app.route('/export-all-tracks', methods=['POST'])
+def export_all_tracks():
+    """Export all tracks data to Excel (not just top 20 displayed)"""
+    try:
+        data = request.get_json()
+        playlist_data = data.get('playlist', {})
+        
+        # Get all tracks from the stored extracted data
+        if not extractedData:
+            return jsonify({'error': 'No extracted data available. Please extract playlist data first.'}), 400
+        
+        # Use all tracks instead of just the displayed ones
+        all_tracks = extractedData.get('all_tracks', extractedData.get('tracks', []))
+        
+        if not all_tracks:
+            return jsonify({'error': 'No tracks data to export'}), 400
+        
+        # Create Excel file with all tracks
+        excel_processor = ExcelProcessor()
+        excel_content = excel_processor.create_excel(playlist_data, all_tracks)
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        temp_file.write(excel_content)
+        temp_file.close()
+        
+        playlist_name = playlist_data.get('name', 'playlist').replace(' ', '_')
+        filename = f"spotify_{playlist_name}_ALL_tracks.xlsx"
+        
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting all tracks Excel: {e}")
+        return jsonify({'error': f'Failed to export all tracks Excel: {str(e)}'}), 500
 
 @app.route('/health')
 def health_check():

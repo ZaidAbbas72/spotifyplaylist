@@ -25,6 +25,10 @@ function initializeEventListeners() {
     // Excel export button
     const exportExcelBtn = document.getElementById('exportExcelBtn');
     exportExcelBtn.addEventListener('click', handleExcelExport);
+    
+    // Export all tracks button
+    const exportAllTracksBtn = document.getElementById('exportAllTracksBtn');
+    exportAllTracksBtn.addEventListener('click', handleExportAllTracks);
 }
 
 function checkApplicationHealth() {
@@ -160,6 +164,19 @@ function displayResults(data) {
         displayAudioFeatures(data.tracks);
     }
     
+    // Show export buttons and update track count info
+    document.getElementById('exportAllTracksBtn').style.display = 'inline-block';
+    
+    // Update track count information
+    const trackCountInfo = document.getElementById('trackCountInfo');
+    const totalTracksCount = document.getElementById('totalTracksCount');
+    if (trackCountInfo && data.total_tracks) {
+        trackCountInfo.textContent = `Showing ${data.tracks.length} of ${data.total_tracks}`;
+    }
+    if (totalTracksCount && data.total_tracks) {
+        totalTracksCount.textContent = data.total_tracks;
+    }
+    
     // Show results section
     const resultsSection = document.getElementById('resultsSection');
     resultsSection.style.display = 'block';
@@ -290,6 +307,10 @@ async function handleCsvExport() {
 
 async function handleExcelExport() {
     await handleExport('excel', 'exportExcelBtn', '/export-excel', 'Excel');
+}
+
+async function handleExportAllTracks() {
+    await handleExport('excel', 'exportAllTracksBtn', '/export-all-tracks', 'All Tracks Excel');
 }
 
 async function handleExport(format, buttonId, endpoint, formatName) {
