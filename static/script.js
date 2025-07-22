@@ -21,6 +21,10 @@ function initializeEventListeners() {
     // CSV export button
     const exportCsvBtn = document.getElementById('exportCsvBtn');
     exportCsvBtn.addEventListener('click', handleCsvExport);
+    
+    // Excel export button
+    const exportExcelBtn = document.getElementById('exportExcelBtn');
+    exportExcelBtn.addEventListener('click', handleExcelExport);
 }
 
 function checkApplicationHealth() {
@@ -169,18 +173,46 @@ function displayPlaylistInfo(playlist) {
     const playlistInfo = document.getElementById('playlistInfo');
     
     const infoItems = [
-        { label: 'Playlist Name', value: playlist.name || 'Unknown' },
-        { label: 'Description', value: playlist.description || 'No description available' },
-        { label: 'Total Saves/Followers', value: formatNumber(playlist.followers || 0) },
-        { label: 'Number of Songs', value: formatNumber(playlist.total_tracks || 0) },
-        { label: 'Total Duration', value: playlist.total_duration || 'Unknown' },
-        { label: 'Spotify URL', value: playlist.external_url ? `<a href="${playlist.external_url}" target="_blank" class="text-success">Open in Spotify</a>` : 'N/A' }
+        { 
+            label: 'Playlist Name', 
+            value: playlist.name || 'Unknown',
+            icon: 'fas fa-music',
+            highlight: true
+        },
+        { 
+            label: 'Description', 
+            value: playlist.description || 'No description available',
+            icon: 'fas fa-info-circle'
+        },
+        { 
+            label: 'Total Saves/Followers', 
+            value: `<div class="playlist-stats"><span class="stat-number">${formatNumber(playlist.followers || 0)}</span><span class="stat-label">saves</span></div>`,
+            icon: 'fas fa-heart'
+        },
+        { 
+            label: 'Number of Songs', 
+            value: `<div class="playlist-stats"><span class="stat-number">${formatNumber(playlist.total_tracks || 0)}</span><span class="stat-label">tracks</span></div>`,
+            icon: 'fas fa-list-ol'
+        },
+        { 
+            label: 'Total Duration', 
+            value: playlist.total_duration || 'Unknown',
+            icon: 'fas fa-clock'
+        },
+        { 
+            label: 'Spotify Link', 
+            value: playlist.external_url ? `<a href="${playlist.external_url}" target="_blank" class="text-success text-decoration-none"><i class="fab fa-spotify me-1"></i>Open in Spotify</a>` : 'N/A',
+            icon: 'fab fa-spotify'
+        }
     ];
     
     playlistInfo.innerHTML = infoItems.map(item => `
-        <div class="col-md-6 col-lg-4 mb-3">
-            <div class="playlist-info-item">
-                <div class="playlist-info-label">${item.label}</div>
+        <div class="col-md-6 col-xl-4 mb-3">
+            <div class="playlist-info-item ${item.highlight ? 'highlight' : ''}">
+                <div class="playlist-info-label">
+                    <i class="${item.icon}"></i>
+                    ${item.label}
+                </div>
                 <div class="playlist-info-value">${item.value}</div>
             </div>
         </div>
@@ -253,20 +285,28 @@ function displayAudioFeatures(tracks) {
 }
 
 async function handleCsvExport() {
+    await handleExport('csv', 'exportCsvBtn', '/export-csv', 'CSV');
+}
+
+async function handleExcelExport() {
+    await handleExport('excel', 'exportExcelBtn', '/export-excel', 'Excel');
+}
+
+async function handleExport(format, buttonId, endpoint, formatName) {
     if (!extractedData) {
         showError('No data available to export');
         return;
     }
     
-    const exportBtn = document.getElementById('exportCsvBtn');
+    const exportBtn = document.getElementById(buttonId);
     const originalText = exportBtn.innerHTML;
     
     try {
         // Show loading state
         exportBtn.disabled = true;
-        exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Exporting...';
+        exportBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i>Exporting ${formatName}...`;
         
-        const response = await fetch('/export-csv', {
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -278,26 +318,27 @@ async function handleCsvExport() {
         });
         
         if (response.ok) {
-            // Download the CSV file
+            // Download the file
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `spotify_${extractedData.playlist.name.replace(/[^a-zA-Z0-9]/g, '_')}_tracks.csv`;
+            const extension = format === 'excel' ? 'xlsx' : 'csv';
+            a.download = `spotify_${extractedData.playlist.name.replace(/[^a-zA-Z0-9]/g, '_')}_tracks.${extension}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
             window.URL.revokeObjectURL(url);
             
-            showSuccess('CSV file downloaded successfully!');
+            showSuccess(`${formatName} file downloaded successfully!`);
         } else {
             const errorData = await response.json();
-            throw new Error(errorData.error || 'Failed to export CSV');
+            throw new Error(errorData.error || `Failed to export ${formatName}`);
         }
         
     } catch (error) {
         console.error('Export error:', error);
-        showError(error.message || 'Failed to export CSV file');
+        showError(error.message || `Failed to export ${formatName} file`);
     } finally {
         // Restore button state
         exportBtn.disabled = false;

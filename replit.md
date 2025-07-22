@@ -7,6 +7,7 @@ A Flask web application that extracts comprehensive track and metadata from Spot
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Export preferences: User requested both CSV and Excel export functionality for comprehensive data analysis.
 
 ## System Architecture
 
@@ -120,4 +121,23 @@ Preferred communication style: Simple, everyday language.
 - API method supports higher throughput but has rate limits
 - Database integration could be added for caching and analytics
 
-The application prioritizes robustness by providing dual extraction methods, ensuring functionality even when API credentials are unavailable. The modular design allows for easy extension and maintenance while providing a user-friendly interface for playlist data extraction.
+## Recent Changes (July 2025)
+
+### UI/UX Improvements
+- **Enhanced Playlist Information Display**: Redesigned playlist metadata cards with icons, gradients, and improved typography
+- **Advanced Export Options**: Added Excel export functionality alongside CSV export
+- **Responsive Design**: Improved mobile layout for export buttons and playlist information
+
+### Excel Export Features
+- **Multi-Sheet Workbook**: Separate sheets for playlist summary, track details, and audio features
+- **Professional Formatting**: Color-coded headers, alternating row colors, auto-adjusted column widths
+- **Comprehensive Data**: Includes all extracted metadata with proper formatting and styling
+- **Statistics Summary**: Automatic calculation of playlist statistics and insights
+
+### Technical Updates
+- **openpyxl Integration**: Added Excel processing capability with advanced formatting
+- **Improved Error Handling**: Better user feedback for extraction failures
+- **API Optimization**: Simplified extraction flow focusing on Spotify API reliability
+- **Enhanced Styling**: Modern gradient designs and improved visual hierarchy
+
+The application prioritizes robustness by providing dual extraction methods, ensuring functionality even when API credentials are unavailable. The modular design allows for easy extension and maintenance while providing a user-friendly interface for playlist data extraction. Recent improvements focus on enhanced data presentation and comprehensive export capabilities.

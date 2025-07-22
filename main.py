@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, jsonify, send_file
 from spotify_extractor import SpotifyExtractor
 from web_scraper import WebScraper
 from data_processor import DataProcessor
+from excel_processor import ExcelProcessor
 import tempfile
 import traceback
 
@@ -120,6 +121,40 @@ def export_csv():
     except Exception as e:
         logger.error(f"Error exporting CSV: {e}")
         return jsonify({'error': f'Failed to export CSV: {str(e)}'}), 500
+
+@app.route('/export-excel', methods=['POST'])
+def export_excel():
+    """Export extracted data to Excel"""
+    try:
+        data = request.get_json()
+        playlist_data = data.get('playlist', {})
+        tracks_data = data.get('tracks', [])
+        
+        if not tracks_data:
+            return jsonify({'error': 'No tracks data to export'}), 400
+        
+        # Create Excel file
+        excel_processor = ExcelProcessor()
+        excel_content = excel_processor.create_excel(playlist_data, tracks_data)
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx')
+        temp_file.write(excel_content)
+        temp_file.close()
+        
+        playlist_name = playlist_data.get('name', 'playlist').replace(' ', '_')
+        filename = f"spotify_{playlist_name}_tracks.xlsx"
+        
+        return send_file(
+            temp_file.name,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        
+    except Exception as e:
+        logger.error(f"Error exporting Excel: {e}")
+        return jsonify({'error': f'Failed to export Excel: {str(e)}'}), 500
 
 @app.route('/health')
 def health_check():
