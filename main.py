@@ -77,37 +77,10 @@ def extract_playlist():
                 })
             
         except Exception as api_error:
-            logger.warning(f"Spotify API failed: {api_error}")
-            
-            # Fallback to web scraping
-            logger.info("Falling back to web scraping...")
-            web_scraper = WebScraper()
-            
-            try:
-                playlist_data, tracks_data = web_scraper.scrape_playlist_data(playlist_url)
-                
-                if playlist_data and tracks_data:
-                    logger.info("Successfully extracted data using web scraping")
-                    
-                    # Process and format the data
-                    processor = DataProcessor()
-                    processed_data = processor.process_tracks(tracks_data, playlist_data)
-                    
-                    return jsonify({
-                        'success': True,
-                        'method': 'Web Scraping',
-                        'playlist': playlist_data,
-                        'tracks': processed_data[:20],  # Top 20 tracks
-                        'total_tracks': len(processed_data)
-                    })
-                else:
-                    raise Exception("No data extracted from web scraping")
-                    
-            except Exception as scrape_error:
-                logger.error(f"Web scraping also failed: {scrape_error}")
-                return jsonify({
-                    'error': f'Both API and web scraping failed. API Error: {str(api_error)}, Scraping Error: {str(scrape_error)}'
-                }), 500
+            logger.error(f"Spotify API failed: {api_error}")
+            return jsonify({
+                'error': f'Spotify API extraction failed: {str(api_error)}. Please ensure the playlist is public and accessible, or try a different playlist URL.'
+            }), 500
         
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
