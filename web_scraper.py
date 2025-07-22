@@ -23,7 +23,7 @@ class WebScraper:
         self.setup_driver()
 
     def setup_driver(self):
-        """Setup Chrome WebDriver with appropriate options"""
+        """Setup Chrome/Chromium WebDriver with appropriate options"""
         try:
             chrome_options = Options()
             chrome_options.add_argument('--headless')
@@ -31,10 +31,17 @@ class WebScraper:
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument('--window-size=1920,1080')
+            chrome_options.add_argument('--disable-extensions')
+            chrome_options.add_argument('--disable-background-timer-throttling')
+            chrome_options.add_argument('--disable-backgrounding-occluded-windows')
+            chrome_options.add_argument('--disable-renderer-backgrounding')
             chrome_options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
             
+            # Use chromium binary
+            chrome_options.binary_location = '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium'
+            
             self.driver = webdriver.Chrome(options=chrome_options)
-            logger.info("Chrome WebDriver initialized successfully")
+            logger.info("Chrome/Chromium WebDriver initialized successfully")
             
         except Exception as e:
             logger.error(f"Failed to initialize WebDriver: {e}")
