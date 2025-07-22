@@ -12,6 +12,10 @@ from data_processor import DataProcessor
 from excel_processor import ExcelProcessor
 import tempfile
 import traceback
+import dotenv
+
+# Load environment variables from .env file
+dotenv.load_dotenv()
 
 # Configure logging
 logging.basicConfig(

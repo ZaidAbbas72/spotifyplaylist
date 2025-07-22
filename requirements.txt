@@ -2,4 +2,4 @@ Flask
 spotipy
 selenium
 beautifulsoup4
-python-
+openpyxl
